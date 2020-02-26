@@ -9,6 +9,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 from typing import Union
 from optuna.distributions import BaseDistribution
 from optuna.samplers import BaseSampler
@@ -142,7 +143,7 @@ class CMASampler(BaseSampler):
         ordered_keys = [key for key in search_space]
         ordered_keys.sort()
 
-        optimizer = self._restore_or_init_optimizer(
+        optimizer, optimizer_trial_number = self._restore_or_init_optimizer(
             completed_trials, search_space, ordered_keys
         )
 
@@ -168,9 +169,9 @@ class CMASampler(BaseSampler):
                     trial._trial_id, "cma:optimizer", pickled_optimizer.hex()
                 )
 
-        # Caution: optimizer should update its seed value
-        seed = self._cma_rng.randint(1, 2 ** 16) + trial.number
-        optimizer._rng = np.random.RandomState(seed)
+        for i in range(trial.number - optimizer_trial_number):
+            optimizer.ask()  # skip parameters that are already sampled.
+
         params = optimizer.ask()
 
         study._storage.set_trial_system_attr(
@@ -187,7 +188,7 @@ class CMASampler(BaseSampler):
         completed_trials: List[optuna.structs.FrozenTrial],
         search_space: Dict[str, BaseDistribution],
         ordered_keys: List[str],
-    ) -> CMA:
+    ) -> Tuple[CMA, int]:
         # Restore a previous CMA object.
         for trial in reversed(completed_trials):
             serialized_optimizer = trial.system_attrs.get(
@@ -196,9 +197,9 @@ class CMASampler(BaseSampler):
             if serialized_optimizer is None:
                 continue
             if isinstance(serialized_optimizer, bytes):
-                return pickle.loads(serialized_optimizer)
+                return pickle.loads(serialized_optimizer), trial.number
             else:
-                return pickle.loads(bytes.fromhex(serialized_optimizer))
+                return pickle.loads(bytes.fromhex(serialized_optimizer)), trial.number
 
         # Init a CMA object.
         if self._x0 is None:
@@ -218,7 +219,7 @@ class CMASampler(BaseSampler):
             bounds=bounds,
             seed=self._cma_rng.randint(1, 2 ** 32),
             n_max_resampling=10 * n_dimension,
-        )
+        ), 0
 
     def sample_independent(
         self,

@@ -160,8 +160,6 @@ class CMA:
         attrs = {}
         for name in self.__dict__:
             # Remove _rng in pickle serialized object.
-            if name == "_rng":
-                continue
             if name == "_C":
                 sym1d = _compress_symmetric(self._C)
                 attrs["_c_1d"] = sym1d
@@ -173,8 +171,6 @@ class CMA:
         state["_C"] = _decompress_symmetric(state["_c_1d"])
         del state["_c_1d"]
         self.__dict__.update(state)
-        # Set _rng for unpickled object.
-        setattr(self, "_rng", np.random.RandomState())
 
     @property
     def population_size(self) -> int:
