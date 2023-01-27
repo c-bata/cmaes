@@ -1,6 +1,9 @@
 # install_requires
 numpy>=1.20.0
 
+# optional dependencies
+scipy
+
 # visualization
 matplotlib
 scipy
