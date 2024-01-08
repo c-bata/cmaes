@@ -24,6 +24,7 @@ Problem:
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
     ackley         : https://www.sfu.ca/~ssurjano/ackley.html
     rastrigin      : https://www.sfu.ca/~ssurjano/rastr.html
+    sphere         : https://www.sfu.ca/~ssurjano/spheref.html
     toxic-lightgbm : https://github.com/c-bata/benchmark-warm-starting-cmaes
 
 Options:
@@ -51,6 +52,10 @@ case "$1" in
     rastrigin)
         # "kurobako problem sigopt --dim 8 rastrigin" only accepts 8-dim.
         PROBLEM=$($KUROBAKO problem command python $DIR/problem_rastrigin.py $DIM)
+        ;;
+    sphere)
+        # "kurobako problem sigopt --dim 8 rastrigin" only accepts 8-dim.
+        PROBLEM=$($KUROBAKO problem command python $DIR/problem_sphere.py $DIM)
         ;;
     toxic-lightgbm)
         PROBLEM=$($KUROBAKO problem warm-starting \
